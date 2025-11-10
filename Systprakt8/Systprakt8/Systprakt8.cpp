@@ -1,0 +1,120 @@
+﻿// Systprakt8.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
+//
+#include <iostream>
+#include <Windows.h>
+#include <conio.h>
+
+const int Turtles = 10;
+const int arr_height = 12;
+const int arr_width = 53;
+int positions[Turtles];
+int rows[Turtles];
+int num_turtles = 0;
+volatile int winner = -1;
+CRITICAL_SECTION cs;
+
+void print() {
+    system("cls");
+    int arr[arr_height][arr_width] = { 0 };
+    for (int i = 0; i < arr_height; i++) {
+        for (int j = 0; j < arr_width; j++) {
+            if ((i == 0 || i == arr_height - 1 || j == 1 || j == 51) && j != 0) {
+                arr[i][j] = 1;
+            }
+        }
+    }
+    for (int i = 0; i < num_turtles; i++) {
+        int x = rows[i];
+        int y = positions[i];
+        if (y >= 0 && y < arr_width) {
+            arr[x][y] = 6;
+        }
+    }
+    for (int i = 0; i < arr_height; i++) {
+        for (int j = 0; j < arr_width; j++) {
+            if (arr[i][j] == 0) std::cout << "  ";
+            else std::cout << arr[i][j] << " ";
+        }
+        std::cout << "\n";
+    }
+}
+
+DWORD WINAPI TurtleThread(LPVOID lpParam) {
+    int id = (int)lpParam;
+    srand(GetTickCount64() + id);
+
+    while (positions[id] < 52) {
+        int step = rand() % 3;
+        positions[id] += step;
+        if (positions[id] > 52) {
+            positions[id] = 52;
+        }
+        EnterCriticalSection(&cs);
+        print();
+
+        if (positions[id] >= 52 && winner == -1) {
+            winner = id + 1;
+        }
+
+        LeaveCriticalSection(&cs);
+
+        if (positions[id] < 52) {
+            Sleep(rand() % 2001 + 1000);
+        }
+    }
+    return 0;
+}
+
+int main() {
+    setlocale(0, "rus");
+    InitializeCriticalSection(&cs);
+    int num=0;
+    while (num < 2 || num > 10) {
+        std::cout << "Сколько черепах участвует в гонке? (2–10): ";
+        std::cin >> num;
+    }
+
+    num_turtles = num;
+    for (int i = 0; i < num; i++) {
+        rows[i] = 1 + i;
+        positions[i] = 0;
+    }
+
+    print();
+    std::cout << "\nНажмите любую клавишу для старта гонки\n";
+    _getch();
+
+    winner = -1;
+    HANDLE threads[Turtles];
+
+    for (int i = 0; i < num; i++) {
+        threads[i] = CreateThread(NULL, 0, TurtleThread, (void*)i, 0, NULL);
+    }
+    for (int i = 0; i < num; i++) {
+        if (threads[i] == NULL) {
+            return GetLastError();
+        }
+    }
+
+    WaitForMultipleObjects(num, threads, TRUE, INFINITE);
+
+    std::cout << "\nГонка завершена!\n";
+    std::cout << "Победителем становится черепашка под номером " << winner << std::endl;
+
+    for (int i = 0; i < num; i++) {
+        CloseHandle(threads[i]);
+    }
+    DeleteCriticalSection(&cs);
+    return 0;
+}
+
+// Запуск программы: CTRL+F5 или меню "Отладка" > "Запуск без отладки"
+// Отладка программы: F5 или меню "Отладка" > "Запустить отладку"
+
+// Советы по началу работы 
+//   1. В окне обозревателя решений можно добавлять файлы и управлять ими.
+//   2. В окне Team Explorer можно подключиться к системе управления версиями.
+//   3. В окне "Выходные данные" можно просматривать выходные данные сборки и другие сообщения.
+//   4. В окне "Список ошибок" можно просматривать ошибки.
+//   5. Последовательно выберите пункты меню "Проект" > "Добавить новый элемент", чтобы создать файлы кода, или "Проект" > "Добавить существующий элемент", чтобы добавить в проект существующие файлы кода.
+//   6. Чтобы снова открыть этот проект позже, выберите пункты меню "Файл" > "Открыть" > "Проект" и выберите SLN-файл.

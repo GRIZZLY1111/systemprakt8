@@ -1,0 +1,6 @@
+﻿  Systprakt8.cpp
+C:\Users\admin\OneDrive\Рабочий стол\Системное программирование\Systprakt8-main\Systprakt8\Systprakt8\Systprakt8.cpp(43,14): warning C4311: приведение типов: усечение указателя из "LPVOID" в "int"
+C:\Users\admin\OneDrive\Рабочий стол\Системное программирование\Systprakt8-main\Systprakt8\Systprakt8\Systprakt8.cpp(43,14): warning C4302: приведение типов: усечение из "LPVOID" к "int"
+C:\Users\admin\OneDrive\Рабочий стол\Системное программирование\Systprakt8-main\Systprakt8\Systprakt8\Systprakt8.cpp(44,28): warning C4244: аргумент: преобразование "ULONGLONG" в "unsigned int", возможна потеря данных
+C:\Users\admin\OneDrive\Рабочий стол\Системное программирование\Systprakt8-main\Systprakt8\Systprakt8\Systprakt8.cpp(91,58): warning C4312: приведение типов: преобразование из "int" в "void *" большего размера
+  Systprakt8.vcxproj -> C:\Users\admin\OneDrive\Рабочий стол\Системное программирование\Systprakt8-main\Systprakt8\x64\Debug\Systprakt8.exe

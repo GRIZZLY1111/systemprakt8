@@ -5,13 +5,13 @@
 #include <conio.h>
 
 const int Turtles = 10;
-const int arr_height = 12;
+const int arr_height = 3;
 const int arr_width = 53;
 int positions[Turtles];
 int rows[Turtles];
 int num_turtles = 0;
 volatile int winner = -1;
-CRITICAL_SECTION cs;
+volatile int finished_count = 0;
 
 void print() {
     system("cls");
@@ -27,7 +27,7 @@ void print() {
         int x = rows[i];
         int y = positions[i];
         if (y >= 0 && y < arr_width) {
-            arr[x][y] = 6;
+            arr[x][y] = i+1;
         }
     }
     for (int i = 0; i < arr_height; i++) {
@@ -43,32 +43,34 @@ DWORD WINAPI TurtleThread(LPVOID lpParam) {
     int id = (int)lpParam;
     srand(GetTickCount64() + id);
 
-    while (positions[id] < 52) {
+    while (true) {
+        if (positions[id] >= 52) {
+            return 0;
+        }
+
         int step = rand() % 3;
+
         positions[id] += step;
         if (positions[id] > 52) {
             positions[id] = 52;
         }
-        EnterCriticalSection(&cs);
-        print();
 
         if (positions[id] >= 52 && winner == -1) {
             winner = id + 1;
         }
 
-        LeaveCriticalSection(&cs);
-
-        if (positions[id] < 52) {
-            Sleep(rand() % 2001 + 1000);
+        if (positions[id] >= 52) {
+            finished_count++;
         }
+
+        Sleep(rand() % 2001 + 1000);
     }
     return 0;
 }
 
 int main() {
     setlocale(0, "rus");
-    InitializeCriticalSection(&cs);
-    int num=0;
+    int num = 0;
     while (num < 2 || num > 10) {
         std::cout << "Сколько черепах участвует в гонке? (2–10): ";
         std::cin >> num;
@@ -76,7 +78,7 @@ int main() {
 
     num_turtles = num;
     for (int i = 0; i < num; i++) {
-        rows[i] = 1 + i;
+        rows[i] = 1;
         positions[i] = 0;
     }
 
@@ -85,6 +87,7 @@ int main() {
     _getch();
 
     winner = -1;
+    finished_count = 0;
     HANDLE threads[Turtles];
 
     for (int i = 0; i < num; i++) {
@@ -96,15 +99,23 @@ int main() {
         }
     }
 
-    WaitForMultipleObjects(num, threads, TRUE, INFINITE);
+    while (true) {
+        print();
+        bool all_finished = (finished_count >= num_turtles);
+
+        if (all_finished) break;
+
+        Sleep(rand() % 2001 + 1000);
+    }
 
     std::cout << "\nГонка завершена!\n";
     std::cout << "Победителем становится черепашка под номером " << winner << std::endl;
 
+    WaitForMultipleObjects(num, threads, TRUE, INFINITE);
+
     for (int i = 0; i < num; i++) {
         CloseHandle(threads[i]);
     }
-    DeleteCriticalSection(&cs);
     return 0;
 }
 
